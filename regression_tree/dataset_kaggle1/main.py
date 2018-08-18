@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+#For Terminal parameters
 import sys
+#For Data handling
 import pandas as pd
-import numpy as np
+from numpy import inf, mean
+#For performance
+import time 
 #Use anynode to avoid names
 from anytree import AnyNode, RenderTree
 
@@ -28,7 +32,7 @@ __author__ = "Ishank Juneja"
 #gets the optimal split threshold for a 
 #particular attribute an returns the 
 #corresponding error measure 
-def optimal_split_MSE( train_data, attr ):
+def optimal_split_MSE( train_data, attr , min_size ):
 	min_MSE  = np.inf
 	thresh = train_data[attr].min()
 	split = 0
@@ -46,15 +50,16 @@ def optimal_split_MSE( train_data, attr ):
 			break
 
 		df_top = train_data[~mask]
-		cur_MSE = df_top.iloc[:,-1].std() + df_bottom.iloc[:,-1].std() 
-		if(cur_MSE < min_MSE):
-			min_MSE = cur_MSE
-			split = thresh
+		if(df_top.shape[0] > min_size and df_bottom.shape[0] > min_size):
+			cur_MSE = df_top.iloc[:,-1].std() + df_bottom.iloc[:,-1].std() 
+			if(cur_MSE < min_MSE):
+				min_MSE = cur_MSE
+				split = thresh
 		thresh = df_bottom[attr].min()
 	return (split, min_MSE)
 
-def optimal_split_MAE( train_data , attr ):
-	min_MAE  = np.inf
+def optimal_split_MAE( train_data , attr , min_size ):
+	min_MAE  = inf
 	thresh = train_data[attr].min()
 	split = 0
 	df_bottom = train_data
@@ -71,26 +76,30 @@ def optimal_split_MAE( train_data , attr ):
 			break
 
 		df_top = train_data[~mask]
-		cur_MAE = df_top.iloc[:,-1].mad() + df_bottom.iloc[:,-1].mad() 
-		if(cur_MAE < min_MAE):
-			min_MAE = cur_MAE
-			split = thresh
+		
+		if(df_top.shape[0] > min_size and df_bottom.shape[0] > min_size):
+			cur_MAE = df_top.iloc[:,-1].mad() + df_bottom.iloc[:,-1].mad() 
+			if(cur_MAE < min_MAE):
+				min_MAE = cur_MAE
+				split = thresh
 		thresh = df_bottom[attr].min()
 	return (split, min_MAE)
 
 #Scope for improvement : Avoid passing mode again and again
-def make_tree( df , mode ):
+def make_tree( df , mode , min_size):
 
+	#For current node, this value is returned if we reach a leaf
+	tree_size = 1
 	# Reached Leaf Node
-	if (df.shape[0] <= min_size) :
+	if (df.shape[0] < 2*min_size) :
 		#get last column for class and take mean to assign label
-		this_node = AnyNode(parent = None, Leaf = True, Label = np.mean(df.iloc[:,-1]), \
+		this_node = AnyNode(parent = None, Leaf = True, Label = mean(df.iloc[:,-1]), \
 							 att = None, sp = None, size = df.shape[0])
-		return this_node
+		return (this_node, tree_size)
 
 	# Start with min possible value
 	#Update as we go along
-	min_err = np.inf
+	min_err = inf
 	cur_err = 0
 	optimal_att = ''
 	split_pt = 0
@@ -103,9 +112,9 @@ def make_tree( df , mode ):
 		#df.reset_index(drop = True, inplace = True)
 		print ('Processing column ', column)
 		if(mode == 0) :
-			(split, cur_err) = optimal_split_MSE(df, column)
+			(split, cur_err) = optimal_split_MSE(df, column, min_size)
 		else :
-			(split, cur_err) = optimal_split_MAE(df, column)
+			(split, cur_err) = optimal_split_MAE(df, column, min_size)
 			print(split, cur_err)
 
 		if (cur_err < min_err) :
@@ -126,13 +135,14 @@ def make_tree( df , mode ):
 	df_right = df[mask]
 	df_left = df[~mask]
 
-	right_child = make_tree(df_right, mode)
-	left_child = make_tree(df_left, mode)
+	(right_child, size_R) = make_tree(df_right, mode, min_size)
+	(left_child, size_L) = make_tree(df_left, mode, min_size)
 	
-	right_child.parent =  this_node
+	right_child.parent =  this_node 
 	left_child.parent =  this_node
+	tree_size = 1 + size_R + size_L
 
-	return this_node
+	return this_node, tree_size
 
 #Main Program
 
@@ -147,7 +157,7 @@ train_data = pd.read_csv(sys.argv[2])
 
 #Minmimum number of training examples that 
 #Are allowed in a ;eaf node  
-min_size = 2*int(sys.argv[6]) + 1
+min_size = int(sys.argv[6])
 
 #Either Abs or MSE
 split_method = sys.argv[7]
@@ -162,15 +172,12 @@ else :
 							mean_squared--')
 
 
+start_time = time.time()
+
 #Initialise Tree  
 #Extend it using Recurssion
 #Decision tree model is stored in root
-root = make_tree(train_data, mode)
+root, tree_size = make_tree(train_data, mode, min_size)
 print (RenderTree(root))
-# if (split_method = '--mean_squared') : 
-	
-# 	# Split as per MSE
-
-# else :
-# 	# Split as per MAE 
-
+print("--- Training Time was %s  ---" % (time.time() - start_time))
+print("--- Number of Nodes are %s ---" % tree_size)
