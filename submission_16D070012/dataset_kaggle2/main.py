@@ -184,7 +184,6 @@ def classify( root , data , mode , get_loss = False ):
 	for index, row in data.iterrows():
 		node = root
 		while( not(node.Leaf) ):
-			#print row[node.att], node.sp  
 			if(row[node.att] > node.sp):
 				node = right_child(node)
 			else:
@@ -213,7 +212,7 @@ def classify( root , data , mode , get_loss = False ):
 		err = err/data.shape[0]
 	else:
 		#Create new data frame
-		df = pd.DataFrame({'output':out_labels})
+		df = pd.DataFrame({'quality':out_labels})
 	return err, df
 
 #Main Program

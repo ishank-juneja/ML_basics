@@ -184,7 +184,6 @@ def classify( root , data , mode , get_loss = False ):
 	for index, row in data.iterrows():
 		node = root
 		while( not(node.Leaf) ):
-			#print row[node.att], node.sp  
 			if(row[node.att] > node.sp):
 				node = right_child(node)
 			else:
