@@ -1,0 +1,6 @@
+<For kaggle 1>
+python2 main_kaggle1.py --loss logistic_loss --batch-size 64 --train-data kaggle_train1.csv --test-data kaggle_test1.csv --loss-weight 0.01
+
+<For kaggle 2>
+python2 main_kaggle2.py --loss logistic_loss --batch-size 64 --train-data kaggle_train2.csv --test-data kaggle_test2.csv --loss-weight 0.01
+
