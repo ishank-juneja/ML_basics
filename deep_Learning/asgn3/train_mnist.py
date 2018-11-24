@@ -25,7 +25,7 @@ dim_input = 784
 dim_output = 10
 
 #Training parameters used while running TF session
-max_epochs = 10
+max_epochs = 1
 learn_rate = 1e-4
 batch_size = 50
 
@@ -40,13 +40,15 @@ total_labels = []
 
 # Create Computation Graph using Class defined in model.py
 nn_instance = myNeuralNet(dim_input, dim_output)
-#Add hidden layers  
+#Add hidden layers, h = 3 
 nn_instance.addHiddenLayer(1000, activation_fn = tf.nn.relu)
-# add more hidden layers here by calling addHiddenLayer as much as you want
-# a net of depth 3 (3 hidden units) should be sufficient for most tasks
+nn_instance.addHiddenLayer(1000, activation_fn = tf.nn.relu)
+nn_instance.addHiddenLayer(1000, activation_fn = tf.nn.relu)
 
 #Add the output layer of the NN
 nn_instance.addFinalLayer()
+#Make graph connection between predictions and flow graph
+nn_instance.eval()	
 #Setup the computational flow graph 
 #of training using the myNN class 
 nn_instance.setup_training(learn_rate)	
@@ -56,15 +58,18 @@ nn_instance.setup_metrics()
 
 # Training steps	
 with tf.Session() as sess:
+	#Initialise TF local variables used to setup metrics etc
+	sess.run(tf.local_variables_initializer())
 	#Initialize all TF variables used as part of the flow graph
 	sess.run(tf.global_variables_initializer())
 	#Using the currently running session, perform training
-	test_pred = nn_instance.train(sess, xtrain, ytrain, max_epochs, train_size, batch_size) 
+	test_pred = nn_instance.train(sess, xtrain, ytrain, max_epochs, batch_size, train_size, xval, yval, valid_size, xtest) 
 	# fill in other arguments as you modify the train(self, sess, ...) in model.py
 	# you will have to pass xtrain, ytrain, etc ... also as arguments so that you can sample batches in train() of model.py
 
 
 # write code here to store test_pred in relevant file
 out_file_path = "predictions/predictions_mnist.txt"
-out_file = open(out_file_path, w)
-fp.write(test_pred) 	
+#out_file = open(out_file_path, 'w')
+#out_file.write(test_pred) 	
+
