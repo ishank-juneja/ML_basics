@@ -19,7 +19,7 @@ For more information, look at /data/census/description
 '''
 
 dim_input = -1 # change this according to your encoding of the input features
-dim_output = 2 # binary class classification using softmax and 1 hot encoding
+dim_output = 1 # binary class classification can be done using sigmoid
 
 max_epochs = 50
 learn_rate = 1e-4
@@ -108,12 +108,3 @@ with tf.Session() as sess:
 	# For that, you'll have to import that in model.py
 
 # write code here to store test_pred in relevant file
-out_file_path = "predictions/predictions_census.txt"
-
-#Commneted out to prevent file over-write 
-#with open(out_file_path, 'w') as f:
-#	for item in test_pred:
-#		if(item == 1):
-#			f.write(">50K\n")
-#		else:
-#			f.write("<=50K\n")

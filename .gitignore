@@ -7,4 +7,5 @@
 *.csv#
 *.zip
 *.tgz
+*.gz
 /deep_Learning/asgn3/data
