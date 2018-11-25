@@ -7,24 +7,15 @@ import math
 
 from model import myNeuralNet
 
-'''
-For this task, the inputting code is not fully given to you.
-The reason for this is that there are two important data cleaning tasks that you need to handle
-1. Handling categorical values
-	Hint: Look up one-hot encoding on the internet
-2. Handling missing attributes
-	Hint: You might want to replace such missing values with a reasonable statistical measure of that attribute
 
-For more information, look at /data/census/description
-'''
-
-dim_input = -1 # change this according to your encoding of the input features
+dim_input = 0 # Increases incrementally as feature encoding is performed 
 dim_output = 2 # binary class classification using softmax and 1 hot encoding
 
 max_epochs = 50
-learn_rate = 1e-4
+learn_rate = 1e-6
 batch_size = 50
 
+#Function to parse CSV files and get number of rows
 def file_size(fname):
 	with open(fname) as f:
 		for i, l in enumerate(f):
@@ -38,19 +29,15 @@ train_size = file_size(train_fname)
 valid_size = file_size(valid_fname)
 test_size = file_size(test_fname)
 
-print(train_size)
-print(valid_size)
-print(test_size)
+#print(train_size)
+#print(valid_size)
+#print(test_size)
 # Import data
 '''
-Note:
-In this framework, we'll read the files as it is and perform data "cleaning" once we've read the batches.
-You might want to go for the other route(like in train_mnist.py) - where the entire data is read in at once
-and then you can perform data manipulations on it.
+In this framework, we'll read the files as is and perform data "cleaning" once we've read the batches.
 
-Also note that the last column is -1 in the test dataset.
+The last column is -1 in the test dataset
 This is to make sure that the same code works for all the three inputting framework,
-but the input labels in test case are garbage (since they are all -1). 
 '''
 
 def get_clean_batches(batch_dict): # this is used because batchers (defined later) give us batch as python dictionary
@@ -71,36 +58,48 @@ def get_clean_batches(batch_dict): # this is used because batchers (defined late
 	# perform further cleaning here before returning
 	return inp_batch, inp_labels
 
-# define tensorflow objects to get input
-dataset_train = tf.contrib.data.make_csv_dataset(train_fname, batch_size)
+#Define Column names in a list based on the Attribute info file description.txt
+column_labels = ["age", "workclass", "fnlwgt", "education", "education-num",
+				"marital-status", "occupation", "relationship", "race", "sex", 
+				"capital-gain", "capital-loss", "hours-per-week", "native-country", "label"] 
+#fnlwgt is the weight of this row, can be treated as another attribute
+column_defaults = [tf.int32, tf.string, tf.int32, tf.string, tf.int32, tf.string, tf.string, tf.string,
+					tf.string, tf.string, tf.int32, tf.int32, tf.int32, tf.string]
+
+#Define tensorflow objects to get input
+dataset_train = tf.contrib.data.make_csv_dataset(train_fname, batch_size, column_labels, column_defaults)
 iterator_train = dataset_train.make_initializable_iterator()
 train_batcher = iterator_train.get_next()
-# print(dataset_train)
-# print(iterator_train)
+#get_clean_batches(train_batcher)
+#print(dataset_train)
+#print(iterator_train)
+#print(type(train_batcher))
 
-dataset_valid = tf.contrib.data.make_csv_dataset(valid_fname, valid_size) # all validation instances in a single tensor
+dataset_valid = tf.contrib.data.make_csv_dataset(valid_fname, valid_size, column_labels, column_defaults) # all validation instances in a single tensor
 iterator_valid = dataset_valid.make_initializable_iterator()
 valid_batcher = iterator_valid.get_next()
 
-dataset_test = tf.contrib.data.make_csv_dataset(test_fname, test_size) # all test instances in a single tensor
+dataset_test = tf.contrib.data.make_csv_dataset(test_fname, test_size, column_labels, column_defaults) # all test instances in a single tensor
 iterator_test = dataset_test.make_initializable_iterator()
 test_batcher = iterator_test.get_next()
+
+#...............#.................#......................
 
 # Create Computation Graph
 nn_instance = myNeuralNet(dim_input, dim_output)
 nn_instance.addHiddenLayer(200, activation_fn=tf.nn.relu)
-# add more hidden layers here by calling addHiddenLayer as much as you want
-# a net of depth 3 should be sufficient for most tasks
+
 nn_instance.addFinalLayer()
+nn_instance.eval()
 nn_instance.setup_training(learn_rate)
 nn_instance.setup_metrics()
 
 # Instantiate Session
-with tf.Session() as sess:
-	sess.run([iterator_train.initializer, iterator_valid.initializer, iterator_test.initializer])
-	sess.run(tf.global_variables_initializer())
+#with tf.Session() as sess:
+#	sess.run([iterator_train.initializer, iterator_valid.initializer, iterator_test.initializer])
+#	sess.run(tf.global_variables_initializer())
 
-	test_pred = nn_instance.train(sess) # add more arguments here
+#	test_pred = nn_instance.train(sess) # add more arguments here
 	# you will have to pass the train_batcher, valid_batcher, test_batcher to this for it to batch
 
 	# In this framework, you will have to perform cleaning of data, and for such things you might want to
