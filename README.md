@@ -6,9 +6,9 @@ Regression Trees
 An implmentation of a decision tree over a real valued data-set to create a model that predicts a real valued label.
 
 **Assignment 2**
-Loss-regularization framework binary classifiers
+Binary classifiers using logistic regression with Loss-Regularization<br>
 Implemented with L2 and L4 regularisers to prevent overfitting.
 
 **Assignment 3**
-Feed-forward Neural Networks with TensorFlow
-Computational Graph models for implementing Neural Network based classifiers on Image (MNIST Characters) and Audio files.
+Feed-forward Neural Networks with TensorFlow<br>
+Computational Graph models for implementing Neural Network based classifiers on Image (MNIST Characters) and Audio files (librosa/MFCC).
